@@ -51,6 +51,7 @@ function formatCategoryName(rawCategory) {
 
 export async function createInitialHelpMenu(client) {
     const commandsPath = path.join(__dirname, "../../commands");
+
     const categoryDirs = (
         await fs.readdir(commandsPath, { withFileTypes: true })
     )
@@ -67,6 +68,7 @@ export async function createInitialHelpMenu(client) {
         ...categoryDirs.map((category) => {
             const categoryName = formatCategoryName(category);
             const icon = CATEGORY_ICONS[categoryName] || "🔍";
+
             return {
                 label: `${icon} ${categoryName}`,
                 description: `View commands in the ${categoryName} category`,
@@ -75,32 +77,17 @@ export async function createInitialHelpMenu(client) {
         }),
     ];
 
-    const botName = client?.user?.username || "Bot";
     const embed = createEmbed({
-        title: `📖 ${botName} Help`,
-        description: 'Set up your server, pick what to enable, then browse commands below.',
-        color: 'primary',
+        title: "Comeback Towny",
+        description: "Comeback Towny",
+        color: "primary",
         thumbnail: client.user?.displayAvatarURL?.({ size: 1024 }),
-        fields: [
-            {
-                name: '🚀 Getting Started',
-                value: [
-                    '**1. Launch setup** — Run `/configwizard` to configure prefix, mod role, and logs.',
-                    '**2. Enable systems** — Use `/commands dashboard` to turn categories on or off.',                    '**3. Browse commands** — Use the menu below to view categories and commands.',
-                ].join('\n'),
-                inline: false,
-            },
-            {
-                name: 'ℹ️ How It Works',
-                value: [
-                    '• Dashboard commands manage each feature visually',
-                    '• Settings are saved per server',
-                    '• Slash commands and prefixes both work once enabled',
-                ].join('\n'),
-                inline: false,
-            },
-             
     });
+
+    embed.setFooter({
+        text: "Comeback Towny",
+    });
+
     embed.setTimestamp();
 
     const bugReportButton = new ButtonBuilder()
@@ -109,7 +96,7 @@ export async function createInitialHelpMenu(client) {
         .setStyle(ButtonStyle.Danger);
 
     const supportButton = new ButtonBuilder()
-        .setLabel("Support Server")
+        .setLabel("Comeback Towny")
         .setURL("https://discord.gg/AWfp6vztAj")
         .setStyle(ButtonStyle.Link);
 
@@ -132,15 +119,14 @@ export async function createInitialHelpMenu(client) {
 
 export default {
     slashOnly: true,
+
     data: new SlashCommandBuilder()
         .setName("help")
         .setDescription("Displays the help menu with all available commands"),
 
     async execute(interaction, guildConfig, client) {
-        
-        const { MessageFlags } = await import('discord.js');
         await InteractionHelper.safeDefer(interaction);
-        
+
         const { embeds, components } = await createInitialHelpMenu(client);
 
         await InteractionHelper.safeEditReply(interaction, {
@@ -155,8 +141,8 @@ export default {
                 }
 
                 const closedEmbed = createEmbed({
-                    title: "Help menu closed",
-                    description: "Help menu has been closed, use /help again.",
+                    title: "Comeback Towny",
+                    description: "Comeback Towny",
                     color: "secondary",
                 });
 
@@ -165,7 +151,10 @@ export default {
                     components: [],
                 });
             } catch (error) {
-                logger.debug('Help menu close edit failed (interaction may have expired):', error?.message);
+                logger.debug(
+                    "Help menu close edit failed (interaction may have expired):",
+                    error?.message
+                );
             }
         }, HELP_MENU_TIMEOUT_MS);
     },
