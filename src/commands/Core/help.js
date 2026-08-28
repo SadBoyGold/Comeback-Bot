@@ -18,7 +18,6 @@ const __dirname = path.dirname(__filename);
 
 const CATEGORY_SELECT_ID = "help-category-select";
 const ALL_COMMANDS_ID = "help-all-commands";
-const BUG_REPORT_BUTTON_ID = "help-bug-report";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
 const CATEGORY_ICONS = {
@@ -91,9 +90,9 @@ export async function createInitialHelpMenu(client) {
     embed.setTimestamp();
 
     const bugReportButton = new ButtonBuilder()
-        .setCustomId(BUG_REPORT_BUTTON_ID)
         .setLabel("Report Bug")
-        .setStyle(ButtonStyle.Danger);
+        .setURL("https://discord.com/channels/@me/1540589439099740220")
+        .setStyle(ButtonStyle.Link);
 
     const supportButton = new ButtonBuilder()
         .setLabel("Comeback Towny")
