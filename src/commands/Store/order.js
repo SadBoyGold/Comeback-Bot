@@ -101,6 +101,11 @@ export default {
             orders[index] = order;
             await setInDb(ordersKey, orders);
 
+            const staffAuthor = {
+                name: 'Comeback Towny Staff',
+                iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
+            };
+
             let dmSent = true;
             try {
                 const customer = await interaction.client.users.fetch(order.customerId);
@@ -109,6 +114,7 @@ export default {
                         title: '<:deliveredicon:1545505411329826866> | Ordine Consegnato',
                         description: `Il tuo ordine **${order.id}** è stato consegnato con successo!`,
                         color: 'success',
+                        author: staffAuthor,
                     }).addFields(
                         { name: 'Numero Ordine', value: `**${order.id}**`, inline: false },
                         { name: 'Prodotto', value: order.item, inline: true },
@@ -124,6 +130,7 @@ export default {
                 title: '<:deliveredicon:1545505411329826866> | Ordine Consegnato',
                 description: `L'ordine **${order.id}** è stato segnato come consegnato.${dmSent ? '\\n\\n📩 Il cliente ha ricevuto il DM di consegna.' : '\\n\\n⚠️ Non è stato possibile inviare il DM al cliente.'}`,
                 color: 'success',
+                author: staffAuthor,
             }).addFields(
                 { name: 'Cliente', value: `<@${order.customerId}>`, inline: true },
                 { name: 'Prodotto', value: order.item, inline: true },

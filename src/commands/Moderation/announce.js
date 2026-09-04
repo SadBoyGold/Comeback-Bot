@@ -60,6 +60,10 @@ export default {
             description: message,
             color: 'primary',
             image: image || null,
+            author: {
+                name: interaction.user.displayName || interaction.user.tag,
+                iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 128 }),
+            },
         }).setFooter({ text: `Pubblicato da ${interaction.user.tag}` });
 
         try {

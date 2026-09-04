@@ -74,10 +74,15 @@ export default {
 
             const dmChannel = await targetUser.createDM();
             
+            const dmAuthor = anonymous
+                ? { name: 'Comeback Towny Staff', iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined }
+                : { name: interaction.user.displayName || interaction.user.tag, iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 128 }) };
+
             const dmEmbed = createEmbed({
                 title: `<:messageicon:1545504279819849768> | ${customTitle || (anonymous ? 'Messaggio dallo Staff' : `Messaggio da ${interaction.user.tag}`)}`,
                 description: sanitized,
                 color: 'primary',
+                author: dmAuthor,
                 image: image || null,
             }).setFooter({
                 text: 'Non è possibile rispondere a questo messaggio.'

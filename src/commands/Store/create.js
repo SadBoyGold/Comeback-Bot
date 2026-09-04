@@ -111,12 +111,18 @@ export default {
 
         // Send the customer their order number/details by DM.
         let dmSent = true;
+        const staffAuthor = {
+            name: 'Comeback Towny Staff',
+            iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
+        };
+
         try {
             await customer.send({
                 embeds: [createEmbed({
                     title: '<:shoppingcarticon:1545504531335479347> | Ordine Creato',
                     description: `Il tuo ordine è stato registrato con successo!`,
                     color: 'success',
+                    author: staffAuthor,
                 }).addFields(
                     { name: 'Numero Ordine', value: `**${orderId}**`, inline: false },
                     { name: 'Prodotto', value: item, inline: true },
@@ -134,6 +140,7 @@ export default {
             title: '<:shoppingcarticon:1545504531335479347> | Ordine Creato',
             description: `L'ordine **${orderId}** è stato salvato correttamente.${dmSent ? '\n\n📩 Il cliente ha ricevuto un DM con il numero dell\'ordine.' : '\n\n⚠️ Non è stato possibile inviare il DM al cliente.'}`, 
             color: 'success',
+            author: staffAuthor,
         }).addFields(
             { name: 'Cliente', value: `<@${customer.id}>`, inline: true },
             { name: 'Prodotto', value: item, inline: true },

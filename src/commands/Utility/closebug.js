@@ -61,6 +61,10 @@ export default {
             title: '✅ | Segnalazione Risolta',
             description: 'La segnalazione è stata risolta con successo. Questa discussione verrà ora chiusa.',
             color: 'success',
+            author: {
+                name: 'Comeback Towny Staff',
+                iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
+            },
         }).addFields(
             { name: 'Domanda', value: domanda, inline: false },
             { name: 'Soluzione', value: soluzione, inline: false },
@@ -73,6 +77,10 @@ export default {
             title: '💬 | Hai ancora bisogno di aiuto?',
             description: `Se il problema non è ancora risolto o hai bisogno di ulteriore assistenza, apri un ticket in <#${TICKET_CHANNEL_ID}>.\n\n[🎫 Apri un ticket](${TICKET_URL})`,
             color: 'primary',
+            author: {
+                name: 'Comeback Towny Staff',
+                iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
+            },
         });
 
         try {
