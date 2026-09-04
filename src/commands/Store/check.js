@@ -10,12 +10,12 @@ function formatOrder(order) {
     const timestamp = Math.floor(Date.parse(order.createdAt) / 1000);
     return [
         `**${order.id}**`,
-        `Customer: <@${order.customerId}>`,
-        `Item: **${order.item}**`,
-        `Price: **€${Number(order.price).toLocaleString()}**`,
+        `Cliente: <@${order.customerId}>`,
+        `Prodotto: **${order.item}**`,
+        `Prezzo: **€${Number(order.price).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**`,
         `Paid to: <@${order.paidToId}>`,
         `Created: <t:${timestamp}:F>`,
-        order.note ? `Note: ${order.note}` : null,
+        order.note ? `Nota: ${order.note}` : null,
     ].filter(Boolean).join('\n');
 }
 
@@ -23,15 +23,15 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('check')
-        .setDescription('Check store records')
+        .setDescription('Controlla gli ordini del negozio')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand(sub => sub
             .setName('order')
-            .setDescription('Check a store order')
+            .setDescription('Controlla un ordine del negozio')
             .addStringOption(option => option
                 .setName('order_id')
-                .setDescription('Order ID, for example CB-00027')
+                .setDescription('ID ordine, ad esempio CB-00027')
                 .setRequired(true)
                 .setMaxLength(20)))
         ,
@@ -47,23 +47,23 @@ export default {
             : null;
 
         if (!order) {
-            throw createError('Order not found', ErrorTypes.VALIDATION, `No order with ID **${orderId}** exists.`);
+            throw createError('Ordine non trovato', ErrorTypes.VALIDATION, `Non esiste alcun ordine con ID **${orderId}**.`);
         }
 
         const timestamp = Math.floor(Date.parse(order.createdAt) / 1000);
         const embed = createEmbed({
-            title: `Order ${order.id}`,
-            description: 'Store order details',
+            title: `Ordine ${order.id}`,
+            description: "Dettagli dell'ordine",
             color: 'primary',
         }).addFields(
-            { name: 'Customer', value: `<@${order.customerId}>`, inline: true },
-            { name: 'Item', value: order.item, inline: true },
-            { name: 'Price', value: `€${Number(order.price).toLocaleString()}`, inline: true },
-            { name: 'Paid To', value: `<@${order.paidToId}>`, inline: true },
-            { name: 'Order Date', value: `<t:${timestamp}:F>`, inline: true },
-            { name: 'Created By', value: `<@${order.createdById}>`, inline: true },
-            ...(order.note ? [{ name: 'Note', value: order.note, inline: false }] : []),
-        ).setFooter({ text: `Order ID: ${order.id}` });
+            { name: 'Cliente', value: `<@${order.customerId}>`, inline: true },
+            { name: 'Prodotto', value: order.item, inline: true },
+            { name: 'Prezzo', value: `€${Number(order.price).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, inline: true },
+            { name: 'Pagato a', value: `<@${order.paidToId}>`, inline: true },
+            { name: 'Data ordine', value: `<t:${timestamp}:F>`, inline: true },
+            { name: 'Creato da', value: `<@${order.createdById}>`, inline: true },
+            ...(order.note ? [{ name: 'Nota', value: order.note, inline: false }] : []),
+        ).setFooter({ text: `ID ordine: ${order.id}` });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }, { command: 'check order' }),

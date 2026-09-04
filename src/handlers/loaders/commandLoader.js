@@ -63,6 +63,12 @@ export async function loadCommands(client) {
     for (const filePath of commandFiles) {
         try {
             const normalizedPath = filePath.replace(/\\/g, '/');
+
+            // Leveling is globally disabled for Comeback Towny. Do not load/register
+            // its slash commands, even if stale files remain in the repository.
+            if (normalizedPath.includes('/commands/Leveling/')) {
+                continue;
+            }
             
             const commandName = path.basename(filePath, '.js');
             const commandDir = path.dirname(filePath);
