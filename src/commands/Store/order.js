@@ -128,7 +128,7 @@ export default {
 
             const embed = createEmbed({
                 title: '<:deliveredicon:1545505411329826866> | Ordine Consegnato',
-                description: `L'ordine **${order.id}** è stato segnato come consegnato.${dmSent ? '\\n\\n📩 Il cliente ha ricevuto il DM di consegna.' : '\\n\\n⚠️ Non è stato possibile inviare il DM al cliente.'}`,
+                description: `L'ordine **${order.id}** è stato segnato come consegnato.${dmSent ? '\n\n📩 Il cliente ha ricevuto il DM di consegna.' : '\n\n⚠️ Non è stato possibile inviare il DM al cliente.'}`,
                 color: 'success',
                 author: staffAuthor,
             }).addFields(

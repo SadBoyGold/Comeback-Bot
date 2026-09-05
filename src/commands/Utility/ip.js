@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { isBotOwner } from '../../config/bot.js';
 
 const STAFF_NAME = 'Comeback Towny Staff';
 const SERVER_ICON = (interaction) => interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined;
@@ -14,6 +15,13 @@ export default {
         .setDMPermission(false),
 
     async execute(interaction) {
+        if (!isBotOwner(interaction.user.id)) {
+            return InteractionHelper.safeReply(interaction, {
+                content: '❌ **Solo i proprietari del bot possono usare questo comando.**',
+                flags: 64,
+            });
+        }
+
         const embed = createEmbed({
             title: '🌐 Comeback Towny — IP Server',
             description: [
