@@ -40,60 +40,49 @@ function formatVersion(data) {
 function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastChecked, javaError, bedrockError }) {
   const javaOnline = Boolean(javaData?.online) && !javaError;
   const bedrockOnline = Boolean(bedrockData?.online) && !bedrockError;
-  const javaPlayersOnline = Number.isFinite(javaData?.players?.online) ? javaData.players.online : 0;
-  const javaPlayersMax = Number.isFinite(javaData?.players?.max) ? javaData.players.max : 0;
-  const bedrockPlayersOnline = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : 0;
-  const bedrockPlayersMax = Number.isFinite(bedrockData?.players?.max) ? bedrockData.players.max : 0;
+  const javaPlayers = Number.isFinite(javaData?.players?.online) ? javaData.players.online : 0;
+  const bedrockPlayers = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : 0;
+  const totalPlayers = javaPlayers + bedrockPlayers;
   const iconUrl = interaction?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined;
 
-  let title = '🎮 Comeback Towny — Stato Server';
   let description;
-
+  let color;
   if (maintenance) {
     description = '🛠️ **Il server è in fase di aggiornamento**\n\nStiamo lavorando al server. Tornerà disponibile appena i lavori saranno terminati.';
+    color = 'warning';
   } else if (javaOnline || bedrockOnline) {
-    description = '🟢 **Il server è online!**\n\nJava e Bedrock sono monitorati automaticamente. Puoi entrare su Comeback Towny durante gli orari di apertura.';
+    description = '🟢 **Server online**\n\nIl server è attualmente disponibile.';
+    color = 'success';
   } else {
-    description = '🔴 **Il server è offline**\n\nAl momento il server non è raggiungibile.';
-  }
-
-  if (javaError || bedrockError) {
-    description += '\n\n⚠️ Uno dei controlli automatici ha avuto un problema temporaneo.';
+    description = '🔴 **Server offline**\n\nIl server non è attualmente disponibile.';
+    color = 'danger';
   }
 
   return createEmbed({
-    title,
+    title: '🎮 Comeback Towny — Stato Server',
     description,
-    color: maintenance ? 'warning' : (javaOnline || bedrockOnline) ? 'success' : 'danger',
-    author: {
-      name: 'Comeback Towny Staff',
-      iconURL: iconUrl,
-    },
+    color,
+    author: { name: 'Comeback Towny Staff', iconURL: iconUrl },
     thumbnail: iconUrl || null,
     fields: [
       {
         name: '📡 Stato',
-        value: maintenance ? '🛠️ In aggiornamento' : `Java ${javaOnline ? '🟢 Online' : '🔴 Offline'}\nBedrock ${bedrockOnline ? '🟢 Online' : '🔴 Offline'}`,
+        value: maintenance ? '🛠️ In aggiornamento' : (javaOnline || bedrockOnline) ? '🟢 Online' : '🔴 Offline',
         inline: true,
       },
       {
         name: '👥 Giocatori',
-        value: `Java **${javaPlayersOnline}** / ${javaPlayersMax || '?'}\nBedrock **${bedrockPlayersOnline}** / ${bedrockPlayersMax || '?'}`,
+        value: `**${totalPlayers}** giocator${totalPlayers === 1 ? 'e' : 'i'} online`,
         inline: true,
       },
       {
-        name: '🌐 Java',
-        value: `\`${getConfig().javaAddress}\``,
+        name: '☕ Java',
+        value: javaOnline ? '🟢 Online' : '🔴 Offline',
         inline: true,
       },
       {
         name: '📱 Bedrock',
-        value: `\`${getConfig().bedrockAddress}\``,
-        inline: true,
-      },
-      {
-        name: '🧩 Versioni',
-        value: `${javaOnline ? `Java \`${formatVersion(javaData)}\`` : 'Java non disponibile'}\n${bedrockOnline ? `Bedrock \`${formatVersion(bedrockData)}\`` : 'Bedrock non disponibile'}`,
+        value: bedrockOnline ? '🟢 Online' : '🔴 Offline',
         inline: true,
       },
       {
