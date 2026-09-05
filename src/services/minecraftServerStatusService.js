@@ -3,6 +3,8 @@ import { createEmbed } from '../utils/embeds.js';
 const DEFAULT_JAVA_SERVER = 'spiral-schools.tun.ply.gg';
 const DEFAULT_BEDROCK_SERVER = '147.185.221.225:64664';
 const STATUS_INTERVAL_MS = Math.max(30_000, Number(process.env.MC_STATUS_INTERVAL_MS || 60_000));
+const SERVER_ALERT_ROLE_ID = '1545874417962328145';
+const SERVER_STATS_CHANNEL_ID = '1545807441554309245';
 
 const monitors = new Map();
 
@@ -85,6 +87,7 @@ function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastCheck
 
 async function updateMonitor(monitor, interactionForIcon = null) {
   const now = new Date();
+  const wasOnline = monitor.lastServerOnline;
   try {
     const [javaResult, bedrockResult] = await Promise.allSettled([
       fetchServerStatus(monitor.javaAddress, false),
@@ -111,6 +114,35 @@ async function updateMonitor(monitor, interactionForIcon = null) {
     monitor.bedrockError = error;
     monitor.lastChecked = now;
   }
+
+  const javaOnline = Boolean(monitor.javaData?.online) && !monitor.javaError;
+  const bedrockOnline = Boolean(monitor.bedrockData?.online) && !monitor.bedrockError;
+  const serverOnline = javaOnline || bedrockOnline;
+
+  if (wasOnline === false && serverOnline === true && !monitor.maintenance) {
+    try {
+      const channel = monitor.message.channel?.id === SERVER_STATS_CHANNEL_ID
+        ? monitor.message.channel
+        : await monitor.message.client.channels.fetch(SERVER_STATS_CHANNEL_ID).catch(() => monitor.message.channel);
+      if (channel?.isTextBased?.()) {
+        await channel.send({
+          content: `<@&${SERVER_ALERT_ROLE_ID}>`,
+          allowedMentions: { roles: [SERVER_ALERT_ROLE_ID] },
+          embeds: [createEmbed({
+            title: '🟢 Il server è online!',
+            description: 'Il server Comeback Towny è stato acceso ed è nuovamente disponibile.',
+            color: 'success',
+            author: {
+              name: 'Comeback Towny Staff',
+              iconURL: interactionForIcon?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined,
+            },
+          })],
+        });
+      }
+    } catch {}
+  }
+
+  monitor.lastServerOnline = serverOnline;
 
   try {
     const embed = buildEmbed({
@@ -144,6 +176,7 @@ export async function startMinecraftMonitor({ guildId, message, interaction }) {
     javaError: null,
     bedrockError: null,
     lastChecked: new Date(),
+    lastServerOnline: null,
     timer: null,
   };
 

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { startMinecraftMonitor } from '../../services/minecraftServerStatusService.js';
@@ -26,7 +26,15 @@ export default {
     });
 
     try {
-      const message = await interaction.channel.send({ embeds: [placeholder] });
+      const alertButton = new ButtonBuilder()
+        .setCustomId('mcserver_alert_toggle')
+        .setLabel('🔔 Avvisi accensione')
+        .setStyle(ButtonStyle.Secondary);
+
+      const message = await interaction.channel.send({
+        embeds: [placeholder],
+        components: [new ActionRowBuilder().addComponents(alertButton)],
+      });
       await startMinecraftMonitor({ guildId: interaction.guildId, message, interaction });
 
       return InteractionHelper.safeEditReply(interaction, {
