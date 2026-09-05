@@ -4,7 +4,7 @@ const DEFAULT_JAVA_SERVER = 'spiral-schools.tun.ply.gg';
 const DEFAULT_BEDROCK_SERVER = '147.185.221.225:64664';
 const STATUS_INTERVAL_MS = Math.max(30_000, Number(process.env.MC_STATUS_INTERVAL_MS || 60_000));
 const SERVER_ALERT_ROLE_ID = '1545874417962328145';
-const SERVER_STATS_CHANNEL_ID = '1545807441554309245';
+const SERVER_STATS_CHANNEL_ID = '1545879204984266865';
 
 const monitors = new Map();
 
@@ -119,25 +119,40 @@ async function updateMonitor(monitor, interactionForIcon = null) {
   const bedrockOnline = Boolean(monitor.bedrockData?.online) && !monitor.bedrockError;
   const serverOnline = javaOnline || bedrockOnline;
 
-  if (wasOnline === false && serverOnline === true && !monitor.maintenance) {
+  // Crea una cronologia nella sala statistiche: ogni accensione/spegnimento
+  // viene aggiunta come nuovo messaggio, senza modificare i messaggi precedenti.
+  // Alla prima lettura non inviamo notifiche, così /mcserverstat non genera un ping.
+  if (wasOnline !== null && wasOnline !== serverOnline) {
     try {
-      const channel = monitor.message.channel?.id === SERVER_STATS_CHANNEL_ID
-        ? monitor.message.channel
-        : await monitor.message.client.channels.fetch(SERVER_STATS_CHANNEL_ID).catch(() => monitor.message.channel);
+      const channel = await monitor.message.client.channels.fetch(SERVER_STATS_CHANNEL_ID).catch(() => null);
       if (channel?.isTextBased?.()) {
-        await channel.send({
-          content: `<@&${SERVER_ALERT_ROLE_ID}>`,
-          allowedMentions: { roles: [SERVER_ALERT_ROLE_ID] },
-          embeds: [createEmbed({
-            title: '🟢 Il server è online!',
-            description: 'Il server Comeback Towny è stato acceso ed è nuovamente disponibile.',
-            color: 'success',
-            author: {
-              name: 'Comeback Towny Staff',
-              iconURL: interactionForIcon?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined,
-            },
-          })],
-        });
+        const common = {
+          color: serverOnline ? 'success' : 'danger',
+          author: {
+            name: 'Comeback Towny Staff',
+            iconURL: interactionForIcon?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined,
+          },
+        };
+
+        if (serverOnline && !monitor.maintenance) {
+          await channel.send({
+            content: `<@&${SERVER_ALERT_ROLE_ID}>`,
+            allowedMentions: { roles: [SERVER_ALERT_ROLE_ID] },
+            embeds: [createEmbed({
+              ...common,
+              title: '🟢 Il server è online!',
+              description: 'Il server Comeback Towny è stato acceso ed è nuovamente disponibile.',
+            })],
+          });
+        } else if (!serverOnline) {
+          await channel.send({
+            embeds: [createEmbed({
+              ...common,
+              title: '🔴 Il server è offline',
+              description: 'Il server Comeback Towny è stato spento o non è attualmente raggiungibile.',
+            })],
+          });
+        }
       }
     } catch {}
   }
