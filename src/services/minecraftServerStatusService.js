@@ -40,49 +40,48 @@ function formatVersion(data) {
 function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastChecked, javaError, bedrockError }) {
   const javaOnline = Boolean(javaData?.online) && !javaError;
   const bedrockOnline = Boolean(bedrockData?.online) && !bedrockError;
-  const javaPlayers = Number.isFinite(javaData?.players?.online) ? javaData.players.online : 0;
-  const bedrockPlayers = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : 0;
-  const totalPlayers = javaPlayers + bedrockPlayers;
+  const serverOnline = javaOnline || bedrockOnline;
+
+  // Prefer Java player data when available. With Geyser, Bedrock players
+  // are normally represented on the Java server, avoiding double-counting.
+  // If Java is unavailable, fall back to Bedrock data.
+  const playerSource = javaOnline && javaData?.players ? javaData : (bedrockOnline ? bedrockData : null);
+  const playersOnline = Number.isFinite(playerSource?.players?.online) ? playerSource.players.online : 0;
+  const playersMax = Number.isFinite(playerSource?.players?.max) ? playerSource.players.max : null;
   const iconUrl = interaction?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined;
 
   let description;
-  let color;
   if (maintenance) {
-    description = '🛠️ **Il server è in fase di aggiornamento**\n\nStiamo lavorando al server. Tornerà disponibile appena i lavori saranno terminati.';
-    color = 'warning';
-  } else if (javaOnline || bedrockOnline) {
-    description = '🟢 **Server online**\n\nIl server è attualmente disponibile.';
-    color = 'success';
+    description = '🛠️ **Il server è in fase di aggiornamento**\\n\\nStiamo lavorando al server. Tornerà disponibile appena i lavori saranno terminati.';
+  } else if (serverOnline) {
+    description = '🟢 **Il server è online!**\\n\\nÈ possibile giocare su Comeback Towny durante gli orari di apertura.';
   } else {
-    description = '🔴 **Server offline**\n\nIl server non è attualmente disponibile.';
-    color = 'danger';
+    description = '🔴 **Il server è offline**\\n\\nAl momento il server non è raggiungibile.';
   }
 
   return createEmbed({
     title: '🎮 Comeback Towny — Stato Server',
     description,
-    color,
-    author: { name: 'Comeback Towny Staff', iconURL: iconUrl },
+    color: maintenance ? 'warning' : serverOnline ? 'success' : 'danger',
+    author: {
+      name: 'Comeback Towny Staff',
+      iconURL: iconUrl,
+    },
     thumbnail: iconUrl || null,
     fields: [
       {
         name: '📡 Stato',
-        value: maintenance ? '🛠️ In aggiornamento' : (javaOnline || bedrockOnline) ? '🟢 Online' : '🔴 Offline',
+        value: maintenance ? '🛠️ **In aggiornamento**' : serverOnline ? '🟢 **Online**' : '🔴 **Offline**',
         inline: true,
       },
       {
         name: '👥 Giocatori',
-        value: `**${totalPlayers}** giocator${totalPlayers === 1 ? 'e' : 'i'} online`,
+        value: serverOnline ? `**${playersOnline}**${playersMax ? ` / ${playersMax}` : ''}` : '**0**',
         inline: true,
       },
       {
-        name: '☕ Java',
-        value: javaOnline ? '🟢 Online' : '🔴 Offline',
-        inline: true,
-      },
-      {
-        name: '📱 Bedrock',
-        value: bedrockOnline ? '🟢 Online' : '🔴 Offline',
+        name: '🎮 Accesso',
+        value: '☕ Java + 📱 Bedrock',
         inline: true,
       },
       {
