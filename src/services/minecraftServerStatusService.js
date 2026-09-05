@@ -1,20 +1,24 @@
 import { createEmbed } from '../utils/embeds.js';
 
-const DEFAULT_SERVER = 'spiral-schools.tun.ply.gg';
+const DEFAULT_JAVA_SERVER = 'spiral-schools.tun.ply.gg';
+const DEFAULT_BEDROCK_SERVER = '147.185.221.225:64664';
 const STATUS_INTERVAL_MS = Math.max(30_000, Number(process.env.MC_STATUS_INTERVAL_MS || 60_000));
 
 const monitors = new Map();
 
 function getConfig() {
   return {
-    address: process.env.MC_SERVER_ADDRESS?.trim() || DEFAULT_SERVER,
+    javaAddress: process.env.MC_SERVER_ADDRESS?.trim() || DEFAULT_JAVA_SERVER,
+    bedrockAddress: process.env.MC_BEDROCK_ADDRESS?.trim() || DEFAULT_BEDROCK_SERVER,
     iconUrl: process.env.MC_SERVER_ICON_URL?.trim() || null,
     statusChannelId: process.env.MC_STATUS_CHANNEL_ID?.trim() || null,
   };
 }
 
-async function fetchServerStatus(address) {
-  const endpoint = `https://api.mcsrvstat.us/3/${encodeURIComponent(address)}`;
+async function fetchServerStatus(address, bedrock = false) {
+  const endpoint = bedrock
+    ? `https://api.mcsrvstat.us/bedrock/3/${encodeURIComponent(address)}`
+    : `https://api.mcsrvstat.us/3/${encodeURIComponent(address)}`;
   const response = await fetch(endpoint, {
     headers: { 'User-Agent': 'Comeback-Towny-Discord-Bot/1.0' },
     signal: AbortSignal.timeout(10_000),
@@ -33,10 +37,13 @@ function formatVersion(data) {
   return 'Non disponibile';
 }
 
-function buildEmbed({ data, maintenance, interaction, lastChecked, error }) {
-  const online = Boolean(data?.online) && !error;
-  const playersOnline = Number.isFinite(data?.players?.online) ? data.players.online : 0;
-  const playersMax = Number.isFinite(data?.players?.max) ? data.players.max : 0;
+function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastChecked, javaError, bedrockError }) {
+  const javaOnline = Boolean(javaData?.online) && !javaError;
+  const bedrockOnline = Boolean(bedrockData?.online) && !bedrockError;
+  const javaPlayersOnline = Number.isFinite(javaData?.players?.online) ? javaData.players.online : 0;
+  const javaPlayersMax = Number.isFinite(javaData?.players?.max) ? javaData.players.max : 0;
+  const bedrockPlayersOnline = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : 0;
+  const bedrockPlayersMax = Number.isFinite(bedrockData?.players?.max) ? bedrockData.players.max : 0;
   const iconUrl = interaction?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined;
 
   let title = '🎮 Comeback Towny — Stato Server';
@@ -44,20 +51,20 @@ function buildEmbed({ data, maintenance, interaction, lastChecked, error }) {
 
   if (maintenance) {
     description = '🛠️ **Il server è in fase di aggiornamento**\n\nStiamo lavorando al server. Tornerà disponibile appena i lavori saranno terminati.';
-  } else if (online) {
-    description = '🟢 **Il server è online!**\n\nPuoi entrare su Comeback Towny in qualsiasi momento durante gli orari di apertura.';
+  } else if (javaOnline || bedrockOnline) {
+    description = '🟢 **Il server è online!**\n\nJava e Bedrock sono monitorati automaticamente. Puoi entrare su Comeback Towny durante gli orari di apertura.';
   } else {
     description = '🔴 **Il server è offline**\n\nAl momento il server non è raggiungibile.';
   }
 
-  if (error) {
-    description += '\n\n⚠️ Il controllo automatico ha avuto un problema temporaneo.';
+  if (javaError || bedrockError) {
+    description += '\n\n⚠️ Uno dei controlli automatici ha avuto un problema temporaneo.';
   }
 
   return createEmbed({
     title,
     description,
-    color: maintenance ? 'warning' : online ? 'success' : 'danger',
+    color: maintenance ? 'warning' : (javaOnline || bedrockOnline) ? 'success' : 'danger',
     author: {
       name: 'Comeback Towny Staff',
       iconURL: iconUrl,
@@ -66,22 +73,27 @@ function buildEmbed({ data, maintenance, interaction, lastChecked, error }) {
     fields: [
       {
         name: '📡 Stato',
-        value: maintenance ? '🛠️ In aggiornamento' : online ? '🟢 Online' : '🔴 Offline',
+        value: maintenance ? '🛠️ In aggiornamento' : `Java ${javaOnline ? '🟢 Online' : '🔴 Offline'}\nBedrock ${bedrockOnline ? '🟢 Online' : '🔴 Offline'}`,
         inline: true,
       },
       {
         name: '👥 Giocatori',
-        value: online ? `**${playersOnline}** / ${playersMax || '?'}` : '0',
+        value: `Java **${javaPlayersOnline}** / ${javaPlayersMax || '?'}\nBedrock **${bedrockPlayersOnline}** / ${bedrockPlayersMax || '?'}`,
         inline: true,
       },
       {
         name: '🌐 Java',
-        value: `\`${getConfig().address}\``,
-        inline: false,
+        value: `\`${getConfig().javaAddress}\``,
+        inline: true,
       },
       {
-        name: '🧩 Versione',
-        value: online ? `\`${formatVersion(data)}\`` : 'Non disponibile',
+        name: '📱 Bedrock',
+        value: `\`${getConfig().bedrockAddress}\``,
+        inline: true,
+      },
+      {
+        name: '🧩 Versioni',
+        value: `${javaOnline ? `Java \`${formatVersion(javaData)}\`` : 'Java non disponibile'}\n${bedrockOnline ? `Bedrock \`${formatVersion(bedrockData)}\`` : 'Bedrock non disponibile'}`,
         inline: true,
       },
       {
@@ -96,22 +108,41 @@ function buildEmbed({ data, maintenance, interaction, lastChecked, error }) {
 async function updateMonitor(monitor, interactionForIcon = null) {
   const now = new Date();
   try {
-    const data = await fetchServerStatus(monitor.address);
-    monitor.lastData = data;
-    monitor.lastError = null;
+    const [javaResult, bedrockResult] = await Promise.allSettled([
+      fetchServerStatus(monitor.javaAddress, false),
+      fetchServerStatus(monitor.bedrockAddress, true),
+    ]);
+
+    if (javaResult.status === 'fulfilled') {
+      monitor.javaData = javaResult.value;
+      monitor.javaError = null;
+    } else {
+      monitor.javaError = javaResult.reason;
+    }
+
+    if (bedrockResult.status === 'fulfilled') {
+      monitor.bedrockData = bedrockResult.value;
+      monitor.bedrockError = null;
+    } else {
+      monitor.bedrockError = bedrockResult.reason;
+    }
+
     monitor.lastChecked = now;
   } catch (error) {
-    monitor.lastError = error;
+    monitor.javaError = error;
+    monitor.bedrockError = error;
     monitor.lastChecked = now;
   }
 
   try {
     const embed = buildEmbed({
-      data: monitor.lastData,
+      javaData: monitor.javaData,
+      bedrockData: monitor.bedrockData,
       maintenance: monitor.maintenance,
       interaction: interactionForIcon,
       lastChecked: monitor.lastChecked,
-      error: monitor.lastError,
+      javaError: monitor.javaError,
+      bedrockError: monitor.bedrockError,
     });
     await monitor.message.edit({ embeds: [embed] });
   } catch (error) {
@@ -127,10 +158,13 @@ export async function startMinecraftMonitor({ guildId, message, interaction }) {
   const monitor = {
     guildId,
     message,
-    address: config.address,
+    javaAddress: config.javaAddress,
+    bedrockAddress: config.bedrockAddress,
     maintenance: false,
-    lastData: null,
-    lastError: null,
+    javaData: null,
+    bedrockData: null,
+    javaError: null,
+    bedrockError: null,
     lastChecked: new Date(),
     timer: null,
   };
