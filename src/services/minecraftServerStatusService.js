@@ -38,23 +38,34 @@ function formatVersion(data) {
 }
 
 function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastChecked, javaError, bedrockError }) {
+  // Java and Bedrock are treated as the same server. If either endpoint reports
+  // the server online, the public status is Online. Prefer Java for player count
+  // when available because Bedrock players connected through Geyser are included
+  // there; otherwise fall back to Bedrock.
   const javaOnline = Boolean(javaData?.online) && !javaError;
   const bedrockOnline = Boolean(bedrockData?.online) && !bedrockError;
-  const javaPlayers = Number.isFinite(javaData?.players?.online) ? javaData.players.online : 0;
-  const bedrockPlayers = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : 0;
-  const totalPlayers = javaPlayers + bedrockPlayers;
+  const serverOnline = javaOnline || bedrockOnline;
+
+  const javaPlayers = Number.isFinite(javaData?.players?.online) ? javaData.players.online : null;
+  const bedrockPlayers = Number.isFinite(bedrockData?.players?.online) ? bedrockData.players.online : null;
+  const playerCount = javaPlayers ?? bedrockPlayers ?? 0;
+
   const iconUrl = interaction?.guild?.iconURL({ extension: 'png', size: 128 }) || getConfig().iconUrl || undefined;
 
   let description;
+  let statusValue;
   let color;
   if (maintenance) {
     description = '🛠️ **Il server è in fase di aggiornamento**\n\nStiamo lavorando al server. Tornerà disponibile appena i lavori saranno terminati.';
+    statusValue = '🛠️ In aggiornamento';
     color = 'warning';
-  } else if (javaOnline || bedrockOnline) {
+  } else if (serverOnline) {
     description = '🟢 **Server online**\n\nIl server è attualmente disponibile.';
+    statusValue = '🟢 Online';
     color = 'success';
   } else {
     description = '🔴 **Server offline**\n\nIl server non è attualmente disponibile.';
+    statusValue = '🔴 Offline';
     color = 'danger';
   }
 
@@ -65,31 +76,9 @@ function buildEmbed({ javaData, bedrockData, maintenance, interaction, lastCheck
     author: { name: 'Comeback Towny Staff', iconURL: iconUrl },
     thumbnail: iconUrl || null,
     fields: [
-      {
-        name: '📡 Stato',
-        value: maintenance ? '🛠️ In aggiornamento' : (javaOnline || bedrockOnline) ? '🟢 Online' : '🔴 Offline',
-        inline: true,
-      },
-      {
-        name: '👥 Giocatori',
-        value: `**${totalPlayers}** giocator${totalPlayers === 1 ? 'e' : 'i'} online`,
-        inline: true,
-      },
-      {
-        name: '☕ Java',
-        value: javaOnline ? '🟢 Online' : '🔴 Offline',
-        inline: true,
-      },
-      {
-        name: '📱 Bedrock',
-        value: bedrockOnline ? '🟢 Online' : '🔴 Offline',
-        inline: true,
-      },
-      {
-        name: '🔄 Ultimo controllo',
-        value: `<t:${Math.floor(lastChecked.getTime() / 1000)}:R>`,
-        inline: true,
-      },
+      { name: '📡 Stato', value: statusValue, inline: true },
+      { name: '👥 Giocatori', value: `**${playerCount}** giocator${playerCount === 1 ? 'e' : 'i'} online`, inline: true },
+      { name: '🔄 Ultimo controllo', value: `<t:${Math.floor(lastChecked.getTime() / 1000)}:R>`, inline: true },
     ],
   });
 }
