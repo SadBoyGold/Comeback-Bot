@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
+import { fileURLToPath } from 'node:url';
 import { createEmbed, errorEmbed } from '../../utils/embeds.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -6,6 +7,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 const ORDERS_KEY = (guildId) => `guild:${guildId}:store:orders`;
 const COUNTER_KEY = (guildId) => `guild:${guildId}:store:order_counter`;
+const ORDER_GUIDE_IMAGE = fileURLToPath(new URL('../../../assets/order-guide.png', import.meta.url));
 
 function formatOrderId(number) {
     return `CB-${String(number).padStart(5, '0')}`;
@@ -117,20 +119,51 @@ export default {
         };
 
         try {
+            const guideAttachment = new AttachmentBuilder(ORDER_GUIDE_IMAGE, {
+                name: 'ordine-tutorial.png',
+            });
+
+            // Messaggio 1: conferma dell'ordine con i dettagli.
             await customer.send({
-                embeds: [createEmbed({
-                    title: '<:shoppingcarticon:1545504531335479347> | Ordine Creato',
-                    description: `Il tuo ordine è stato registrato con successo!`,
-                    color: 'success',
-                    author: staffAuthor,
-                }).addFields(
-                    { name: 'Numero Ordine', value: `**${orderId}**`, inline: false },
-                    { name: 'Prodotto', value: item, inline: true },
-                    { name: 'Prezzo', value: `€${roundedPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, inline: true },
-                    { name: 'Pagato a', value: `<@${paidTo.id}>`, inline: true },
-                    { name: 'Data Ordine', value: `<t:${Math.floor(Date.parse(createdAt) / 1000)}:F>`, inline: false },
-                    ...(note ? [{ name: 'Nota', value: note, inline: false }] : []),
-                )],
+                embeds: [
+                    createEmbed({
+                        title: '<:shoppingcarticon:1545504531335479347> | Ordine Creato',
+                        description: `Il tuo ordine è stato registrato con successo! **Conserva il tuo Numero Ordine**: ti servirà per completare l'acquisto.`,
+                        color: 'success',
+                        author: staffAuthor,
+                    }).addFields(
+                        { name: 'Numero Ordine', value: `**${orderId}**`, inline: false },
+                        { name: 'Prodotto', value: item, inline: true },
+                        { name: 'Prezzo', value: `€${roundedPrice.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, inline: true },
+                        { name: 'Pagato a', value: `<@${paidTo.id}>`, inline: true },
+                        { name: 'Data Ordine', value: `<t:${Math.floor(Date.parse(createdAt) / 1000)}:F>`, inline: false },
+                        ...(note ? [{ name: 'Nota', value: note, inline: false }] : []),
+                    ),
+                ],
+            });
+
+            // Messaggio 2: tutorial separato, con l'immagine allegata.
+            await customer.send({
+                files: [guideAttachment],
+                embeds: [
+                    createEmbed({
+                        title: '📋 | Come completare il tuo ordine',
+                        description: [
+                            'Per ricevere il tuo acquisto, apri il ticket e segui questi passaggi:',
+                            '',
+                            `**1.** Vai a <#1540594049206063235>`,
+                            '**2.** Apri un ticket nella categoria **Ordini**',
+                            '**3.** Compila tutte le informazioni richieste',
+                            `**4.** Inserisci il tuo **Numero Ordine: ${orderId}**`,
+                            '**5.** Invia il ticket e attendi che lo staff elabori il tuo ordine',
+                            '',
+                            "💡 **Conserva questo Numero Ordine finché l'ordine non viene consegnato.**",
+                        ].join('\n'),
+                        color: 'primary',
+                        author: staffAuthor,
+                        image: 'attachment://ordine-tutorial.png',
+                    }),
+                ],
             });
         } catch (dmError) {
             dmSent = false;
