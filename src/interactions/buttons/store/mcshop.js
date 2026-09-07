@@ -315,8 +315,10 @@ export default [
                         .addFields(
                             { name: 'Totale da pagare', value: `€${Number(request.price).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`, inline: true },
                             { name: 'Pagamento a', value: request.paidToTag || `<@${request.paidToId}>`, inline: true },
+                            { name: '📦 Dopo il pagamento', value: 'Dopo aver effettuato il pagamento, lo staff creerà il tuo **ordine ufficiale** e ti verrà inviato il relativo numero d\'ordine.' },
+                            { name: '💡 Hai già parlato con un owner?', value: 'Se hai già richiesto l\'acquisto direttamente in chat vocale o **IRL** con uno degli owner (**Efan** o **Titti**), **non è necessario creare una richiesta qui**.' },
                         )
-                        .setFooter({ text: 'Dopo il pagamento, lo staff creerà il tuo ordine ufficiale.' })],
+                        .setFooter({ text: 'Attendi la conferma del pagamento da parte dello staff.' })],
                 });
             } catch {
                 // The request remains accepted even when DMs are closed.
