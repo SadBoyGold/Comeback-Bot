@@ -13,6 +13,10 @@ function parseChunkQuantity(raw) {
 export default {
     name: 'mcshop_purchase_form',
     async execute(interaction) {
+        // A modal submit must be acknowledged within Discord's 3-second window.
+        // Defer immediately because this handler performs database and API calls.
+        const acknowledged = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+        if (!acknowledged) return;
         const productValue = interaction.fields.getStringSelectValues('mcshop_form_product')?.[0];
         const payeeValue = interaction.fields.getStringSelectValues('mcshop_form_payee')?.[0];
         const product = getProduct(productValue);
@@ -21,22 +25,19 @@ export default {
         const quantity = parseChunkQuantity(rawQuantity);
 
         if (!product || !payee) {
-            return InteractionHelper.safeReply(interaction, {
-                flags: MessageFlags.Ephemeral,
+            return InteractionHelper.safeEditReply(interaction, {
                 content: '❌ I dati della richiesta non sono validi.',
             });
         }
 
         if (quantity === null) {
-            return InteractionHelper.safeReply(interaction, {
-                flags: MessageFlags.Ephemeral,
+            return InteractionHelper.safeEditReply(interaction, {
                 content: '❌ Inserisci una quantità di Chunk valida oppure lascia il campo vuoto.',
             });
         }
 
         if (productValue === 'chunks' && quantity < 1) {
-            return InteractionHelper.safeReply(interaction, {
-                flags: MessageFlags.Ephemeral,
+            return InteractionHelper.safeEditReply(interaction, {
                 content: '❌ Per acquistare Chunk devi indicare almeno 1 Chunk.',
             });
         }
@@ -72,8 +73,7 @@ export default {
 
         const channel = await interaction.guild.channels.fetch(REQUEST_CHANNEL_ID).catch(() => null);
         if (!channel?.isTextBased()) {
-            return InteractionHelper.safeReply(interaction, {
-                flags: MessageFlags.Ephemeral,
+            return InteractionHelper.safeEditReply(interaction, {
                 content: `⚠️ Richiesta **${requestId}** salvata, ma il canale delle richieste non è disponibile.`,
             });
         }
