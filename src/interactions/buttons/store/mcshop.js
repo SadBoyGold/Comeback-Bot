@@ -1,11 +1,12 @@
 import {
     ActionRowBuilder,
     ModalBuilder,
+    LabelBuilder,
+    StringSelectMenuBuilder,
     TextInputBuilder,
     TextInputStyle,
     ButtonBuilder,
     ButtonStyle,
-    StringSelectMenuBuilder,
     EmbedBuilder,
     MessageFlags,
     PermissionFlagsBits,
@@ -67,25 +68,58 @@ export default [
     {
         name: 'mcshop_request',
         async execute(interaction) {
-            const embed = new EmbedBuilder()
-                .setColor(0x5865F2)
-                .setTitle('📝 Richiesta di acquisto')
-                .setDescription('Seleziona **cosa vuoi comprare** dal menu qui sotto.\n\nSuccessivamente potrai indicare eventuali Chunk aggiuntivi e scegliere a chi effettuare il pagamento.')
-                .setFooter({ text: 'Comeback Towny • Richiesta privata' });
+            const productMenu = new StringSelectMenuBuilder()
+                .setCustomId('mcshop_form_product')
+                .setPlaceholder('Seleziona un prodotto')
+                .setMinValues(1)
+                .setMaxValues(1)
+                .addOptions(SHOP_PRODUCTS.map((product) => ({
+                    label: product.label,
+                    value: product.value,
+                    description: product.description,
+                    emoji: product.value === 'chunks' ? '⛏️' : '🛒',
+                })));
 
-            return InteractionHelper.safeReply(interaction, {
-                flags: MessageFlags.Ephemeral,
-                embeds: [embed],
-                components: [
-                    productSelectRow(),
-                    new ActionRowBuilder().addComponents(
-                        new ButtonBuilder()
-                            .setCustomId('mcshop_cancel')
-                            .setLabel('Annulla')
-                            .setStyle(ButtonStyle.Danger)
-                    ),
-                ],
-            });
+            const payeeMenu = new StringSelectMenuBuilder()
+                .setCustomId('mcshop_form_payee')
+                .setPlaceholder('Seleziona a chi vuoi pagare')
+                .setMinValues(1)
+                .setMaxValues(1)
+                .addOptions(PAYEES.map((payee) => ({
+                    label: payee.label,
+                    value: payee.value,
+                    description: payee.description,
+                    emoji: '💶',
+                })));
+
+            const quantityInput = new TextInputBuilder()
+                .setCustomId('mcshop_form_chunks')
+                .setStyle(TextInputStyle.Short)
+                .setLabel('Quanti Chunk vuoi acquistare? (opzionale)')
+                .setPlaceholder('Lascia vuoto se non vuoi Chunk aggiuntivi')
+                .setRequired(false)
+                .setMaxLength(5);
+
+            const modal = new ModalBuilder()
+                .setCustomId('mcshop_purchase_form')
+                .setTitle('Richiesta di acquisto');
+
+            modal.addLabelComponents(
+                new LabelBuilder()
+                    .setLabel('Cosa vuoi comprare?')
+                    .setDescription('Seleziona il prodotto desiderato.')
+                    .setStringSelectMenuComponent(productMenu),
+                new LabelBuilder()
+                    .setLabel('Chunk aggiuntivi')
+                    .setDescription('Opzionale. Per il prodotto Chunk, indica qui la quantità.')
+                    .setTextInputComponent(quantityInput),
+                new LabelBuilder()
+                    .setLabel('A chi vuoi pagare?')
+                    .setDescription('Scegli Efan oppure Titti.')
+                    .setStringSelectMenuComponent(payeeMenu),
+            );
+
+            return InteractionHelper.safeShowModal(interaction, modal);
         },
     },
     {
