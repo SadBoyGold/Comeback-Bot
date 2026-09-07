@@ -1,12 +1,11 @@
 import {
     ActionRowBuilder,
     ModalBuilder,
-    LabelBuilder,
-    StringSelectMenuBuilder,
     TextInputBuilder,
     TextInputStyle,
     ButtonBuilder,
     ButtonStyle,
+    StringSelectMenuBuilder,
     EmbedBuilder,
     MessageFlags,
     PermissionFlagsBits,
@@ -68,58 +67,25 @@ export default [
     {
         name: 'mcshop_request',
         async execute(interaction) {
-            const productMenu = new StringSelectMenuBuilder()
-                .setCustomId('mcshop_form_product')
-                .setPlaceholder('Seleziona un prodotto')
-                .setMinValues(1)
-                .setMaxValues(1)
-                .addOptions(SHOP_PRODUCTS.map((product) => ({
-                    label: product.label,
-                    value: product.value,
-                    description: product.description,
-                    emoji: product.value === 'chunks' ? '⛏️' : '🛒',
-                })));
+            const embed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle('📝 Richiesta di acquisto')
+                .setDescription('Seleziona **cosa vuoi comprare** dal menu qui sotto.\n\nSuccessivamente potrai indicare eventuali Chunk aggiuntivi e scegliere a chi effettuare il pagamento.')
+                .setFooter({ text: 'Comeback Towny • Richiesta privata' });
 
-            const payeeMenu = new StringSelectMenuBuilder()
-                .setCustomId('mcshop_form_payee')
-                .setPlaceholder('Seleziona a chi vuoi pagare')
-                .setMinValues(1)
-                .setMaxValues(1)
-                .addOptions(PAYEES.map((payee) => ({
-                    label: payee.label,
-                    value: payee.value,
-                    description: payee.description,
-                    emoji: '💶',
-                })));
-
-            const quantityInput = new TextInputBuilder()
-                .setCustomId('mcshop_form_chunks')
-                .setStyle(TextInputStyle.Short)
-                .setLabel('Quanti Chunk vuoi acquistare? (opzionale)')
-                .setPlaceholder('Lascia vuoto se non vuoi Chunk aggiuntivi')
-                .setRequired(false)
-                .setMaxLength(5);
-
-            const modal = new ModalBuilder()
-                .setCustomId('mcshop_purchase_form')
-                .setTitle('Richiesta di acquisto');
-
-            modal.addLabelComponents(
-                new LabelBuilder()
-                    .setLabel('Cosa vuoi comprare?')
-                    .setDescription('Seleziona il prodotto desiderato.')
-                    .setStringSelectMenuComponent(productMenu),
-                new LabelBuilder()
-                    .setLabel('Chunk aggiuntivi')
-                    .setDescription('Opzionale. Per il prodotto Chunk, indica qui la quantità.')
-                    .setTextInputComponent(quantityInput),
-                new LabelBuilder()
-                    .setLabel('A chi vuoi pagare?')
-                    .setDescription('Scegli Efan oppure Titti.')
-                    .setStringSelectMenuComponent(payeeMenu),
-            );
-
-            return InteractionHelper.safeShowModal(interaction, modal);
+            return InteractionHelper.safeReply(interaction, {
+                flags: MessageFlags.Ephemeral,
+                embeds: [embed],
+                components: [
+                    productSelectRow(),
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('mcshop_cancel')
+                            .setLabel('Annulla')
+                            .setStyle(ButtonStyle.Danger)
+                    ),
+                ],
+            });
         },
     },
     {
@@ -128,7 +94,7 @@ export default [
             const productValue = args[0];
             const product = getProduct(productValue);
             if (!product) {
-                return InteractionHelper.safeReply(interaction, { content: '❌ Prodotto non valido.' });
+                return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Prodotto non valido.' });
             }
 
             const modal = new ModalBuilder()
@@ -153,7 +119,7 @@ export default [
             const productValue = args[0];
             const product = getProduct(productValue);
             if (!product || productValue === 'chunks') {
-                return InteractionHelper.safeReply(interaction, { content: '❌ Questa scelta non è disponibile per questo prodotto.' });
+                return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Questa scelta non è disponibile per questo prodotto.' });
             }
 
             return InteractionHelper.safeEditReply(interaction, {
@@ -178,10 +144,10 @@ export default [
             const payee = getPayee(payeeValue);
             const quantity = Number(quantityRaw || 0);
             if (!product || !payee || !Number.isInteger(quantity) || quantity < 0) {
-                return InteractionHelper.safeReply(interaction, { content: '❌ Dati della richiesta non validi.' });
+                return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Dati della richiesta non validi.' });
             }
             if (productValue === 'chunks' && quantity < 1) {
-                return InteractionHelper.safeReply(interaction, { content: '❌ Devi indicare almeno 1 Chunk.' });
+                return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Devi indicare almeno 1 Chunk.' });
             }
 
             const guild = interaction.guild;
@@ -215,7 +181,7 @@ export default [
 
             const channel = await guild.channels.fetch(REQUEST_CHANNEL_ID).catch(() => null);
             if (!channel?.isTextBased()) {
-                return InteractionHelper.safeReply(interaction, { content: `⚠️ Richiesta **${requestId}** salvata, ma il canale delle richieste non è disponibile.` });
+                return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: `⚠️ Richiesta **${requestId}** salvata, ma il canale delle richieste non è disponibile.` });
             }
 
             const staffEmbed = new EmbedBuilder()
@@ -349,10 +315,8 @@ export default [
                         .addFields(
                             { name: 'Totale da pagare', value: `€${Number(request.price).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`, inline: true },
                             { name: 'Pagamento a', value: request.paidToTag || `<@${request.paidToId}>`, inline: true },
-                            { name: '📦 Dopo il pagamento', value: 'Dopo aver effettuato il pagamento, lo staff creerà il tuo **ordine ufficiale** e ti verrà inviato il relativo numero d\'ordine.' },
-                            { name: '💡 Hai già parlato con un owner?', value: 'Se hai già richiesto l\'acquisto direttamente in chat vocale o **IRL** con uno degli owner (**Efan** o **Titti**), **non è necessario creare una richiesta qui**.' },
                         )
-                        .setFooter({ text: 'Attendi la conferma del pagamento da parte dello staff.' })],
+                        .setFooter({ text: 'Dopo il pagamento, lo staff creerà il tuo ordine ufficiale.' })],
                 });
             } catch {
                 // The request remains accepted even when DMs are closed.

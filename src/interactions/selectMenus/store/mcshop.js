@@ -3,6 +3,7 @@ import {
     ButtonBuilder,
     ButtonStyle,
     EmbedBuilder,
+    MessageFlags,
 } from 'discord.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getProduct, PAYEES } from '../../../commands/Store/mcshop.js';
@@ -13,7 +14,7 @@ export default {
         const productValue = interaction.values[0];
         const product = getProduct(productValue);
         if (!product) {
-            return InteractionHelper.safeReply(interaction, { content: '❌ Prodotto non valido.' });
+            return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Prodotto non valido.' });
         }
 
         const quantityButton = new ButtonBuilder()

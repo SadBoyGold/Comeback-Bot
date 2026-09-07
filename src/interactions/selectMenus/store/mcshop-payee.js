@@ -3,6 +3,7 @@ import {
     ButtonBuilder,
     ButtonStyle,
     EmbedBuilder,
+    MessageFlags,
 } from 'discord.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getProduct, getPayee } from '../../../commands/Store/mcshop.js';
@@ -16,10 +17,10 @@ export default {
         const product = getProduct(productValue);
         const payee = getPayee(payeeValue);
         if (!product || !payee || !Number.isInteger(quantity) || quantity < 0) {
-            return InteractionHelper.safeReply(interaction, { content: '❌ Dati della richiesta non validi.' });
+            return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Dati della richiesta non validi.' });
         }
         if (productValue === 'chunks' && quantity < 1) {
-            return InteractionHelper.safeReply(interaction, { content: '❌ Per i Chunk devi indicare almeno 1 Chunk.' });
+            return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Per i Chunk devi indicare almeno 1 Chunk.' });
         }
 
         const total = Math.round((product.price + quantity * 0.5 + Number.EPSILON) * 100) / 100;
