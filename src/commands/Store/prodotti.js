@@ -2,15 +2,20 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getColor } from '../../config/bot.js';
 
-const STORE_ICON = '🛒';
+const STORE_ICON = '<:shoppingcarticon:1545504531335479347>';
+const PAYMENT_ICON = '💵';
+
+function authorFor(guild) {
+    return {
+        name: 'Comeback Towny Staff',
+        iconURL: guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
+    };
+}
 
 function buildProductsEmbed(guild) {
-    const embed = new EmbedBuilder()
+    return new EmbedBuilder()
         .setColor(getColor('primary') || '#336699')
-        .setAuthor({
-            name: 'Comeback Towny Staff',
-            iconURL: guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
-        })
+        .setAuthor(authorFor(guild))
         .setTitle(`${STORE_ICON} COME BACK TOWNY — LISTINO`)
         .setDescription(
             '## 💰 LISTINO PRODOTTI\n\n' +
@@ -35,18 +40,25 @@ function buildProductsEmbed(guild) {
             '### ⛏️ Pacchetto Minatore — €3\n' +
             '• Piccone in Diamante\n• Ascia in Diamante\n• Pala in Diamante\n• Torce\n• Risorse per il mining\n• Cibo\n\n' +
             '### 🌾 Pacchetto Agricoltore — €1,50\n' +
-            '• Strumenti per l\'agricoltura\n• Semi\n• Farina d\'ossa\n• Cibo\n• Risorse per l\'agricoltura\n\n' +
+            '• Strumenti per l’agricoltura\n• Semi\n• Farina d’ossa\n• Cibo\n• Risorse per l’agricoltura\n\n' +
             '### 🏗️ Pacchetto Costruttore — €3\n' +
             '• Blocchi da costruzione\n• Blocchi decorativi\n• Legno e pietra\n• Vetro\n• Materiali da costruzione'
         )
-        .addFields({
-            name: '💵 PAGAMENTO',
-            value: '**Accettiamo esclusivamente pagamenti in contanti.**',
-            inline: false,
-        })
-        .setFooter({ text: 'Comeback Towny • Listino ufficiale' });
+        .setFooter({ text: 'Comeback Towny • Listino prodotti' });
+}
 
-    return embed;
+function buildPaymentEmbed(guild) {
+    return new EmbedBuilder()
+        .setColor(getColor('primary') || '#336699')
+        .setAuthor(authorFor(guild))
+        .setTitle(`${PAYMENT_ICON} COME BACK TOWNY — PAGAMENTO`)
+        .setDescription(
+            '### 💵 PAGAMENTO\n\n' +
+            '**Accettiamo esclusivamente pagamenti in contanti.**\n\n' +
+            'Dopo aver scelto il prodotto, crea una richiesta di acquisto tramite il pannello del negozio e attendi l’approvazione di owner/staff.\n\n' +
+            '⚠️ **Non effettuare il pagamento prima che la richiesta sia stata accettata.**'
+        )
+        .setFooter({ text: 'Comeback Towny • Informazioni pagamento' });
 }
 
 export default {
@@ -62,9 +74,9 @@ export default {
         if (!deferred) return;
 
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [buildProductsEmbed(interaction.guild)],
+            embeds: [buildProductsEmbed(interaction.guild), buildPaymentEmbed(interaction.guild)],
         });
     },
 };
 
-export { buildProductsEmbed };
+export { buildProductsEmbed, buildPaymentEmbed };

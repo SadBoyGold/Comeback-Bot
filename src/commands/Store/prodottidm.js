@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
-import { buildProductsEmbed } from './prodotti.js';
+import { buildProductsEmbed, buildPaymentEmbed } from './prodotti.js';
 
 export default {
     slashOnly: true,
@@ -31,7 +31,7 @@ export default {
 
         try {
             await targetUser.send({
-                embeds: [buildProductsEmbed(interaction.guild)],
+                embeds: [buildProductsEmbed(interaction.guild), buildPaymentEmbed(interaction.guild)],
             });
 
             return InteractionHelper.safeEditReply(interaction, {
