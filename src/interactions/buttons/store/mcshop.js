@@ -290,7 +290,7 @@ export default [
                     iconURL: interaction.guild?.iconURL({ extension: 'png', size: 128 }) || undefined,
                 })
                 .setTitle('✅ Richiesta accettata')
-                .setDescription(`La richiesta **${request.id}** è stata accettata.`)
+                .setDescription(`La richiesta **${request.id}** è stata accettata.\n\n📦 **Dopo il pagamento**\nUna volta ricevuto il pagamento, lo staff creerà l’**ordine ufficiale**.`)
                 .addFields(
                     { name: 'Cliente', value: `<@${request.customerId}>`, inline: true },
                     { name: 'Prodotto', value: request.product, inline: true },
@@ -313,7 +313,7 @@ export default [
                     embeds: [new EmbedBuilder()
                         .setColor(0x57F287)
                         .setTitle('✅ Richiesta accettata')
-                        .setDescription(`La tua richiesta **${request.id}** è stata accettata da owner/staff.`)
+                        .setDescription(`La tua richiesta **${request.id}** è stata accettata da owner/staff.\n\n📦 **Dopo il pagamento**\nUna volta ricevuto il pagamento, lo staff creerà l’**ordine ufficiale** e riceverai il relativo **numero d’ordine**.`)
                         .addFields(
                             { name: 'Totale da pagare', value: `€${Number(request.price).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`, inline: true },
                             { name: 'Pagamento a', value: request.paidToTag || `<@${request.paidToId}>`, inline: true },
