@@ -122,7 +122,8 @@ export default [
                 return InteractionHelper.safeReply(interaction, { flags: MessageFlags.Ephemeral, content: '❌ Questa scelta non è disponibile per questo prodotto.' });
             }
 
-            return InteractionHelper.safeEditReply(interaction, {
+            await interaction.deferUpdate();
+            return interaction.editReply({
                 embeds: [paymentStepEmbed(product, 0)],
                 components: [
                     payeeSelectRow(productValue, 0),
@@ -239,7 +240,8 @@ export default [
                 dmSent = false;
             }
 
-            return InteractionHelper.safeEditReply(interaction, {
+            return InteractionHelper.safeReply(interaction, {
+                flags: MessageFlags.Ephemeral,
                 embeds: [new EmbedBuilder()
                     .setColor(0x57F287)
                     .setTitle('✅ Richiesta inviata')
@@ -326,7 +328,8 @@ export default [
     {
         name: 'mcshop_cancel',
         async execute(interaction) {
-            return InteractionHelper.safeEditReply(interaction, {
+            await interaction.deferUpdate();
+            return interaction.editReply({
                 content: '❌ Richiesta annullata.',
                 embeds: [],
                 components: [],

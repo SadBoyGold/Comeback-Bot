@@ -50,7 +50,8 @@ export default {
                     : 'Puoi aggiungere Chunk a **€0,50 ciascuno** oppure continuare senza Chunk aggiuntivi.')
             );
 
-        return InteractionHelper.safeEditReply(interaction, {
+        await interaction.deferUpdate();
+        return interaction.editReply({
             embeds: [embed],
             components,
         });

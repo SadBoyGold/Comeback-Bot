@@ -35,7 +35,8 @@ export default {
                 'Premi **Invia richiesta** per mandare la richiesta allo staff.'
             );
 
-        return InteractionHelper.safeEditReply(interaction, {
+        await interaction.deferUpdate();
+        return interaction.editReply({
             embeds: [embed],
             components: [new ActionRowBuilder().addComponents(
                 new ButtonBuilder()

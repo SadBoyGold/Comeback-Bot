@@ -49,7 +49,8 @@ export default {
                 'Seleziona **a chi vuoi pagare** per completare la richiesta.'
             );
 
-        return InteractionHelper.safeEditReply(interaction, {
+        return InteractionHelper.safeReply(interaction, {
+            flags: MessageFlags.Ephemeral,
             embeds: [embed],
             components: [
                 new ActionRowBuilder().addComponents(menu),
