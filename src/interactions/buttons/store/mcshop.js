@@ -313,12 +313,12 @@ export default [
                     embeds: [new EmbedBuilder()
                         .setColor(0x57F287)
                         .setTitle('✅ Richiesta accettata')
-                        .setDescription(`La tua richiesta **${request.id}** è stata accettata da owner/staff.\n\n📦 **Dopo il pagamento**\nDopo aver effettuato il pagamento, verrà creato il tuo **ordine ufficiale** e riceverai il relativo numero d'ordine.`)
+                        .setDescription(`La tua richiesta **${request.id}** è stata accettata da owner/staff.`)
                         .addFields(
                             { name: 'Totale da pagare', value: `€${Number(request.price).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`, inline: true },
                             { name: 'Pagamento a', value: request.paidToTag || `<@${request.paidToId}>`, inline: true },
                         )
-                        .setFooter({ text: 'Effettua il pagamento per procedere con la creazione dell\'ordine.' })],
+                        .setFooter({ text: 'Dopo il pagamento, lo staff creerà il tuo ordine ufficiale.' })],
                 });
             } catch {
                 // The request remains accepted even when DMs are closed.
