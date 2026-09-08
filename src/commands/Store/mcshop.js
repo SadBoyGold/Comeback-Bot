@@ -51,10 +51,7 @@ function buildShopEmbed(guild) {
             'Visualizza il listino oppure crea una richiesta di acquisto.\n\n' +
             '💵 **Pagamento:** esclusivamente in contanti.\n' +
             '📋 Dopo la richiesta, **owner/staff** la valuteranno prima del pagamento.\n' +
-            '✅ Una volta ricevuto il pagamento, lo staff creerà l’ordine ufficiale.\n\n' +
-            '⚠️ **IMPORTANTE**\n' +
-            'Se hai già parlato **di persona (IRL)** con **Efan o Titti** e hai **già effettuato il pagamento**, **NON creare una richiesta di acquisto**.\n' +
-            'In questo caso, l’ordine verrà gestito direttamente dallo staff.'
+            '✅ Una volta ricevuto il pagamento, lo staff creerà l’ordine ufficiale.'
         )
         .addFields({
             name: '🛒 Come funziona',
