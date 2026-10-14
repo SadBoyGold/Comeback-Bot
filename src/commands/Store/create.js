@@ -39,6 +39,12 @@ export default {
                 .setName('paid_to')
                 .setDescription('Staff che ha ricevuto il pagamento')
                 .setRequired(true))
+            .addIntegerOption(option => option
+                .setName('chunks')
+                .setDescription('Chunk aggiuntivi per un pacchetto, oppure quantità per un ordine solo Chunk')
+                .setRequired(false)
+                .setMinValue(0)
+                .setMaxValue(10000))
             .addStringOption(option => option
                 .setName('note')
                 .setDescription("Nota opzionale sull'ordine")
@@ -68,6 +74,7 @@ export default {
         const roundedPrice = Math.round((price + Number.EPSILON) * 100) / 100;
         const paidTo = interaction.options.getUser('paid_to');
         const note = interaction.options.getString('note')?.trim() || null;
+        const chunkQuantity = interaction.options.getInteger('chunks') ?? 0;
 
         if (customer.bot) {
             throw createError('Invalid customer', ErrorTypes.VALIDATION, 'A bot cannot be the customer of an order.');
@@ -97,6 +104,7 @@ export default {
             customerTag: customer.tag,
             item,
             price: roundedPrice,
+            chunks: chunkQuantity,
             paidToId: paidTo.id,
             paidToTag: paidTo.tag,
             note,
