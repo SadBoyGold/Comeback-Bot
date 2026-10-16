@@ -90,10 +90,6 @@ export default {
             }
 
             const order = orders[index];
-            const normalizedItem = String(order.item || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-            if (/(pacchetto\s+starter|starter\s+extra|starter\s+premium|guerriero|minatore|agricoltore|costruttore|chunk)/i.test(normalizedItem)) {
-                throw createError('Consegna Minecraft richiesta', ErrorTypes.VALIDATION, `Per consegnare **${order.id}** nel server Minecraft usa **/giveorder order_id:${order.id}**. L'ordine sarà segnato come completato solo dopo la conferma del plugin.`);
-            }
             if (order.completedAt) {
                 throw createError('Ordine già completato', ErrorTypes.VALIDATION, `L'ordine **${order.id}** è già stato consegnato.`);
             }
